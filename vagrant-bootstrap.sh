@@ -95,12 +95,11 @@ if [[ -z "grep '^UseDNS' /etc/ssh/sshd_config" ]]; then
 fi
 
 echo "customize the message of the day"
-if [[ -n "$MOTD" ]]; then
-  echo $MOTD > /etc/motd.tail
-else
+if [[ -z "$MOTD" ]]; then
   echo "If you would like to customize the message of the day, set MOTD env variable"
-  echo 'Welcome to your Vagrant box.' > /etc/motd.tail
+  MOTD='Welcome to your Vagrant box.'
 fi
+echo -e "###############################################################################\n# ${MOTD}\n###############################################################################" > /etc/motd.tail
 
 # Record when the basebox was built
 date > /etc/bootstrap_date
