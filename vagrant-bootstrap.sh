@@ -23,7 +23,7 @@ platform="$(lsb_release -i -s)"
 platform_version="$(lsb_release -s -r)"
 
 # Run the script in debug mode
-set -x
+#set -x
 
 
 ###############################################################################
@@ -32,9 +32,11 @@ set -x
 # The main user (`$account` in our case) needs to have **password-less** sudo
 # This user belongs to the `admin`/`sudo` group, so we'll change that line.
 if [[ -z "grep -e '^Defaults\s\+exempt_group=admin$' /etc/sudoers" ]]; then
+  echo "exempting admin group from defaults"
   sed -i -e '/Defaults\s\+env_reset/a Defaults\texempt_group=admin' /etc/sudoers
 fi
 
+echo "adding $account to admin group and making admin have passwordless sudo"
 groupadd -r admin || true
 usermod -a -G admin $account
 sed -i -e 's/%admin ALL=(ALL) ALL/%admin ALL=(ALL) NOPASSWD:ALL/g' /etc/sudoers
@@ -48,9 +50,10 @@ export DEBIAN_FRONTEND=noninteractive
 # Get rid of annoyances and extraneous error messages
 ###############################################################################
 
-# remove "stdin is not a tty" error message
+echo "remove \"stdin is not a tty\" error message"
 sed -i 's/^mesg n$//g' /root/.profile
 
+echo "set locale to en_US"
 # http://serverfault.com/questions/500764/dpkg-reconfigure-unable-to-re-open-stdin-no-file-or-directory
 # Set the LC_CTYPE so that auto-completion works and such.
 #echo "LC_ALL=\"en_US\"" > /etc/default/locale
@@ -69,6 +72,7 @@ dpkg-reconfigure locales
 # Since Vagrant only supports key-based authentication for SSH, we must
 # set up the vagrant user to use key-based authentication. We can get the
 # public key used by the Vagrant gem directly from its Github repository.
+echo "fetching unsecured vagrant public key for key based ssh"
 vssh="/home/${account}/.ssh"
 mkdir -p $vssh
 chmod 700 $vssh
@@ -85,12 +89,12 @@ unset vssh
 # Misc tweaks
 ###############################################################################
 
-# Tweak sshd to prevent DNS resolution (speed up logins)
+echo "Tweak sshd to prevent DNS resolution (speed up logins)"
 if [[ -z "grep '^UseDNS' /etc/ssh/sshd_config" ]]; then
   echo 'UseDNS no' >> /etc/ssh/sshd_config
 fi
 
-# customize the message of the day
+echo "customize the message of the day"
 if [[ -n "$MOTD" ]]; then
   echo $MOTD > /etc/motd.tail
 else
@@ -109,6 +113,7 @@ date > /etc/bootstrap_date
 # and then taking everything from the left of the r (eg 4.3.20r96996 should be 4.3.20)
 vbox_version="$VBOX_VERSION"
 if [[ -n "$vbox_version" ]]; then
+  echo "Setting up guest additions for virtualbox ${vbox_version}"
   apt-get install linux-headers-generic build-essential dkms
   cd /tmp
   wget "http://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso"
@@ -126,7 +131,7 @@ fi
 ###############################################################################
 # Clean up
 ###############################################################################
-
+echo "Cleaning up packages, files, and log files"
 # Remove the linux headers to keep things pristine
 apt-get -y remove linux-headers-$(uname -r)
 apt-get -y remove linux-headers-generic build-essential dkms
@@ -149,11 +154,6 @@ rm /lib/udev/rules.d/75-persistent-net-generator.rules
 # Remove any temporary work files, including the postinstall.sh script
 rm -f /home/${account}/{*.iso,bootstrap*.sh}
 
-
-###############################################################################
-# Compress Image Size
-###############################################################################
-
 # clear temp
 rm -rf /tmp/*
 
@@ -165,13 +165,18 @@ for i in "${!log_files[@]}"; do
   cat /dev/null > ${log_files[i]}
 done
 
+
+###############################################################################
+# Compress Image Size
+###############################################################################
+
 # Zero out the free space to save space in the final image
 dd if=/dev/zero of=/EMPTY bs=1M
 rm -f /EMPTY
 
 # leave no trace
 rm /home/${account}/.bash_history
-rm "${BASH_SOURCE[0]}"
+#rm "${BASH_SOURCE[0]}"
 
 exit
 
