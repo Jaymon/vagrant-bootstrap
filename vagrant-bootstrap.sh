@@ -3,7 +3,7 @@
 # This script is designed to bootstrap a vagrant box from a plain vanilla Ubuntu
 # install, You can pass in the user you want to use when calling the script:
 #
-#    $ ./vagrant-bootstrap.sh VIRTUALBOX_VERSION
+#    $ ./vagrant-bootstrap.sh 
 #
 # It is ripped off from Vagrant's postinstall.sh script that was leftover in the
 # default Vagrant 12.04 box that Hashicorp put out
@@ -13,11 +13,9 @@
 # Setup script variables
 ###############################################################################
 account="vagrant"
-# you can find out what version your virtualbox is by running VBoxManage --version
-# and then taking everything from the left of the r (eg 4.3.20r96996 should be 4.3.20)
-vbox_version="$1"
 
 # Enable truly non interactive apt-get installs
+# https://www.debian.org/releases/sarge/alpha/ch05s02.html.en
 export DEBIAN_FRONTEND=noninteractive
 
 # Determine the platform (i.e. Debian or Ubuntu) and platform version
@@ -29,7 +27,7 @@ set -x
 
 
 ###############################################################################
-# Passwordless sudo
+# Passwordless sudo and root access
 ###############################################################################
 # The main user (`$account` in our case) needs to have **password-less** sudo
 # This user belongs to the `admin`/`sudo` group, so we'll change that line.
@@ -42,6 +40,10 @@ usermod -a -G admin $account
 sed -i -e 's/%admin ALL=(ALL) ALL/%admin ALL=(ALL) NOPASSWD:ALL/g' /etc/sudoers
 
 
+echo "Set the root password to \"vagrant\" at the prompt"
+export DEBIAN_FRONTEND=newt
+passwd root
+export DEBIAN_FRONTEND=noninteractive
 ###############################################################################
 # Get rid of annoyances and extraneous error messages
 ###############################################################################
@@ -72,7 +74,7 @@ mkdir -p $vssh
 chmod 700 $vssh
 (cd $vssh &&
   wget --no-check-certificate \
-    'https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub' \
+    'https://raw.githubusercontent.com/mitchellh/vagrant/master/keys/vagrant.pub' \
     -O $vssh/authorized_keys)
 chmod 0600 $vssh/authorized_keys
 chown -R ${account}:vagrant $vssh
@@ -92,6 +94,7 @@ fi
 if [[ -n "$MOTD" ]]; then
   echo $MOTD > /etc/motd.tail
 else
+  echo "If you would like to customize the message of the day, set MOTD env variable"
   echo 'Welcome to your Vagrant box.' > /etc/motd.tail
 fi
 
@@ -102,16 +105,21 @@ date > /etc/bootstrap_date
 ###############################################################################
 # Install guest additions
 ###############################################################################
+# you can find out what version your virtualbox is by running VBoxManage --version
+# and then taking everything from the left of the r (eg 4.3.20r96996 should be 4.3.20)
+vbox_version="$VBOX_VERSION"
 if [[ -n "$vbox_version" ]]; then
   apt-get install linux-headers-generic build-essential dkms
   cd /tmp
-  wget 'http://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso'
+  wget "http://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso"
   mkdir -p /media/VBoxGuestAdditions
   mount -o loop,ro VBoxGuestAdditions_${vbox_version}.iso /media/VBoxGuestAdditions
   sh /media/VBoxGuestAdditions/VBoxLinuxAdditions.run
   rm VBoxGuestAdditions_${vbox_version}.iso
   umount /media/VBoxGuestAdditions
   rmdir /media/VBoxGuestAdditions
+else
+  echo "if you want to setup guest additions, set VBOX_VERSION env variable"
 fi
 
 
