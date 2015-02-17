@@ -1,29 +1,21 @@
 #!/bin/bash
-##
-# This script is designed to bootstrap a chef box from a plain vanilla 12.04 Ubuntu
+###############################################################################
+# This script is designed to bootstrap a vagrant box from a plain vanilla Ubuntu
 # install, You can pass in the user you want to use when calling the script:
 #
-#    $ ./bootstrap.sh USERNAME
+#    $ ./vagrant-bootstrap.sh VIRTUALBOX_VERSION
 #
 # It is ripped off from Vagrant's postinstall.sh script that was leftover in the
-# default Vagrant 12.04 box the Hashicorp put out
-##
+# default Vagrant 12.04 box that Hashicorp put out
+###############################################################################
 
-# **bootstrap.sh** is a script executed after Debian/Ubuntu has been
-# installed and restarted. There is no user interaction so all commands must
-# be able to run in a non-interactive mode.
-#
-# If any package install time questions need to be set, you can use
-# `preeseed.cfg` to populate the settings.
-
-### Setup Variables
-
-# The non-root user that will be created.
-if [ -z "$1" ]; then
-  print "must pass in USERNAME you want to create"
-  exit
-fi
-account="$1"
+###############################################################################
+# Setup script variables
+###############################################################################
+account="vagrant"
+# you can find out what version your virtualbox is by running VBoxManage --version
+# and then taking everything from the left of the r (eg 4.3.20r96996 should be 4.3.20)
+vbox_version="$1"
 
 # Enable truly non interactive apt-get installs
 export DEBIAN_FRONTEND=noninteractive
@@ -35,69 +27,104 @@ platform_version="$(lsb_release -s -r)"
 # Run the script in debug mode
 set -x
 
-### Customize Sudoers
 
+###############################################################################
+# Passwordless sudo
+###############################################################################
 # The main user (`$account` in our case) needs to have **password-less** sudo
 # This user belongs to the `admin`/`sudo` group, so we'll change that line.
-# TODO: only run this if the line Defaults exempt_group=admin doesn't already exist
-sed -i -e '/Defaults\s\+env_reset/a Defaults\texempt_group=admin' /etc/sudoers
-case "$platform" in
-  Debian)
-      sed -i -e 's/%sudo ALL=(ALL) ALL/%sudo ALL=(ALL) NOPASSWD:ALL/g' /etc/sudoers
-    ;;
-  Ubuntu)
-    groupadd -r admin || true
-    usermod -a -G admin $account
-    sed -i -e 's/%admin ALL=(ALL) ALL/%admin ALL=(ALL) NOPASSWD:ALL/g' /etc/sudoers
-    ;;
-esac
+if [[ -z "grep -e '^Defaults\s\+exempt_group=admin$' /etc/sudoers" ]]; then
+  sed -i -e '/Defaults\s\+env_reset/a Defaults\texempt_group=admin' /etc/sudoers
+fi
 
-### Other setup
+groupadd -r admin || true
+usermod -a -G admin $account
+sed -i -e 's/%admin ALL=(ALL) ALL/%admin ALL=(ALL) NOPASSWD:ALL/g' /etc/sudoers
 
+
+###############################################################################
+# Get rid of annoyances and extraneous error messages
+###############################################################################
+
+# remove "stdin is not a tty" error message
+sed -i 's/^mesg n$//g' /root/.profile
+
+# http://serverfault.com/questions/500764/dpkg-reconfigure-unable-to-re-open-stdin-no-file-or-directory
 # Set the LC_CTYPE so that auto-completion works and such.
-echo "LC_ALL=\"en_US\"" > /etc/default/locale
+#echo "LC_ALL=\"en_US\"" > /etc/default/locale
 
-### Vagrant SSH Keys
+export LANGUAGE=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+locale-gen en_US.UTF-8
+dpkg-reconfigure locales
+
+
+###############################################################################
+# setup vagrant ssh keys
+###############################################################################
 
 # Since Vagrant only supports key-based authentication for SSH, we must
 # set up the vagrant user to use key-based authentication. We can get the
 # public key used by the Vagrant gem directly from its Github repository.
-#vssh="/home/${account}/.ssh"
-#mkdir -p $vssh
-#chmod 700 $vssh
-#(cd $vssh &&
-#  wget --no-check-certificate \
-#    'https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub' \
-#    -O $vssh/authorized_keys)
-#chmod 0600 $vssh/authorized_keys
-#chown -R ${account}:vagrant $vssh
-#unset vssh
+vssh="/home/${account}/.ssh"
+mkdir -p $vssh
+chmod 700 $vssh
+(cd $vssh &&
+  wget --no-check-certificate \
+    'https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub' \
+    -O $vssh/authorized_keys)
+chmod 0600 $vssh/authorized_keys
+chown -R ${account}:vagrant $vssh
+unset vssh
 
-# Remove the linux headers to keep things pristine
-apt-get -y remove linux-headers-$(uname -r)
 
-### Misc. Tweaks
+###############################################################################
+# Misc tweaks
+###############################################################################
 
 # Tweak sshd to prevent DNS resolution (speed up logins)
-echo 'UseDNS no' >> /etc/ssh/sshd_config
+if [[ -z "grep '^UseDNS' /etc/ssh/sshd_config" ]]; then
+  echo 'UseDNS no' >> /etc/ssh/sshd_config
+fi
 
-# Customize the message of the day
-case "$platform" in
-  Debian)
-    echo 'Welcome to your First Opinion virtual machine.' > /var/run/motd
-    ;;
-  Ubuntu)
-    echo 'Welcome to your First Opinion virtual machine.' > /etc/motd.tail
-    ;;
-esac
+# customize the message of the day
+if [[ -n "$MOTD" ]]; then
+  echo $MOTD > /etc/motd.tail
+else
+  echo 'Welcome to your Vagrant box.' > /etc/motd.tail
+fi
 
 # Record when the basebox was built
 date > /etc/bootstrap_date
 
-### Clean up
+
+###############################################################################
+# Install guest additions
+###############################################################################
+if [[ -n "$vbox_version" ]]; then
+  apt-get install linux-headers-generic build-essential dkms
+  cd /tmp
+  wget 'http://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso'
+  mkdir -p /media/VBoxGuestAdditions
+  mount -o loop,ro VBoxGuestAdditions_${vbox_version}.iso /media/VBoxGuestAdditions
+  sh /media/VBoxGuestAdditions/VBoxLinuxAdditions.run
+  rm VBoxGuestAdditions_${vbox_version}.iso
+  umount /media/VBoxGuestAdditions
+  rmdir /media/VBoxGuestAdditions
+fi
+
+
+###############################################################################
+# Clean up
+###############################################################################
+
+# Remove the linux headers to keep things pristine
+apt-get -y remove linux-headers-$(uname -r)
+apt-get -y remove linux-headers-generic build-essential dkms
 
 # Remove the build tools to keep things pristine
-apt-get -y remove build-essential make curl git-core
+apt-get -y remove make curl git-core
 
 apt-get -y autoremove
 apt-get -y clean
@@ -114,15 +141,15 @@ rm /lib/udev/rules.d/75-persistent-net-generator.rules
 # Remove any temporary work files, including the postinstall.sh script
 rm -f /home/${account}/{*.iso,bootstrap*.sh}
 
-### Compress Image Size
 
-# get rid of gemdocs
-rm -rf "$(${ruby_home}/bin/gem env gemdir)"/doc/*
+###############################################################################
+# Compress Image Size
+###############################################################################
 
 # clear temp
 rm -rf /tmp/*
 
-# clear logs
+# clear all logs
 IFS=$'\n'
 log_files=( $(find /var/log -type f) )
 unset IFS
@@ -134,6 +161,11 @@ done
 dd if=/dev/zero of=/EMPTY bs=1M
 rm -f /EMPTY
 
+# leave no trace
+rm /home/${account}/.bash_history
+rm "${BASH_SOURCE[0]}"
+
 exit
 
 # And we're done.
+
