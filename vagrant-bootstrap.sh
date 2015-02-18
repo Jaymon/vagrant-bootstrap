@@ -90,9 +90,9 @@ unset vssh
 # Misc tweaks
 ###############################################################################
 
-echo "Tweak sshd to prevent DNS resolution (speed up logins)"
 is_dns_ignored=$(grep '^UseDNS' /etc/ssh/sshd_config; echo $?)
 if [[ $is_dns_ignored -eq 1 ]]; then
+  echo "Tweak sshd to prevent DNS resolution (speed up logins)"
   echo 'UseDNS no' >> /etc/ssh/sshd_config
 fi
 
@@ -115,15 +115,20 @@ date > /etc/bootstrap_date
 vbox_version="$VBOX_VERSION"
 if [[ -n "$vbox_version" ]]; then
   echo "Setting up guest additions for virtualbox ${vbox_version}"
-  apt-get -y install linux-headers-generic build-essential dkms
+  #apt-get -y install linux-headers-generic build-essential dkms
+  apt-get -y install dkms gcc
   cd /tmp
   wget "http://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso"
-  mkdir -p /media/VBoxGuestAdditions
-  mount -o loop,ro VBoxGuestAdditions_${vbox_version}.iso /media/VBoxGuestAdditions
-  sh /media/VBoxGuestAdditions/VBoxLinuxAdditions.run
+  #mkdir -p /mnt
+  mount -o loop,ro VBoxGuestAdditions_${vbox_version}.iso /mnt
+  sh /mnt/VBoxLinuxAdditions.run
   rm VBoxGuestAdditions_${vbox_version}.iso
-  umount /media/VBoxGuestAdditions
-  rmdir /media/VBoxGuestAdditions
+  umount /mnt
+  #rmdir /media/VBoxGuestAdditions
+  is_installed=$(lsmod | grep vbox; echo $?)
+  if [[ $is_installed -gt 0 ]]; then
+    echo "WARNING: GUEST ADDITIONS ARE NOT INSTALLED CORRECTLY"
+  fi
 else
   echo "if you want to setup guest additions, set VBOX_VERSION env variable"
 fi
@@ -135,7 +140,7 @@ fi
 echo "Cleaning up packages, files, and log files"
 # Remove the linux headers to keep things pristine
 apt-get -y remove linux-headers-$(uname -r)
-apt-get -y remove linux-headers-generic build-essential dkms
+apt-get -y remove linux-headers-generic build-essential gcc dkms
 
 # Remove the build tools to keep things pristine
 apt-get -y remove make curl git-core

@@ -18,3 +18,11 @@ If you are going to export some variables like `$MOTD` or `$VBOX_VERSION` then y
     export MOTD="I want this to be my message instead"
     sudo -E ./vagrant-bootstrap.sh
 
+After you have ran the script, you can package it up:
+
+    VboxManage list vms
+    vagrant package --base "<NAME OF BOX>"
+
+And then import it into Vagrant:
+
+    vagrant box add --name <BOX NAME> /PATH/TO/package.box
