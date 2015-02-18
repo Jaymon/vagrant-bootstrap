@@ -177,8 +177,9 @@ rm -f /EMPTY
 
 # leave no trace
 rm /home/${account}/.bash_history
-#rm "${BASH_SOURCE[0]}"
+rm "${BASH_SOURCE[0]}"
 
+echo "You might want to run \"sudo reboot\" one last time before packaging this box"
 exit
 
 # And we're done.
