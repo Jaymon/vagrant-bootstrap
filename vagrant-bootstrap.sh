@@ -31,7 +31,8 @@ platform_version="$(lsb_release -s -r)"
 ###############################################################################
 # The main user (`$account` in our case) needs to have **password-less** sudo
 # This user belongs to the `admin`/`sudo` group, so we'll change that line.
-if [[ -z "grep -e '^Defaults\s\+exempt_group=admin$' /etc/sudoers" ]]; then
+is_exempt=$(grep -e '^Defaults\s\+exempt_group=admin$' /etc/sudoers; echo $?)
+if [[ $is_exempt -eq 1 ]]; then
   echo "exempting admin group from defaults"
   sed -i -e '/Defaults\s\+env_reset/a Defaults\texempt_group=admin' /etc/sudoers
 fi
@@ -90,7 +91,8 @@ unset vssh
 ###############################################################################
 
 echo "Tweak sshd to prevent DNS resolution (speed up logins)"
-if [[ -z "grep '^UseDNS' /etc/ssh/sshd_config" ]]; then
+is_dns_ignored=$(grep '^UseDNS' /etc/ssh/sshd_config; echo $?)
+if [[ $is_dns_ignored -eq 1 ]]; then
   echo 'UseDNS no' >> /etc/ssh/sshd_config
 fi
 
@@ -113,7 +115,7 @@ date > /etc/bootstrap_date
 vbox_version="$VBOX_VERSION"
 if [[ -n "$vbox_version" ]]; then
   echo "Setting up guest additions for virtualbox ${vbox_version}"
-  apt-get install linux-headers-generic build-essential dkms
+  apt-get -y install linux-headers-generic build-essential dkms
   cd /tmp
   wget "http://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso"
   mkdir -p /media/VBoxGuestAdditions
@@ -169,7 +171,7 @@ done
 # Compress Image Size
 ###############################################################################
 
-# Zero out the free space to save space in the final image
+echo "Zero out the free space to save space in the final image"
 dd if=/dev/zero of=/EMPTY bs=1M
 rm -f /EMPTY
 
