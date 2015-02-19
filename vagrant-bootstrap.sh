@@ -57,13 +57,14 @@ sed -i 's/^mesg n$//g' /root/.profile
 echo "set locale to en_US"
 # http://serverfault.com/questions/500764/dpkg-reconfigure-unable-to-re-open-stdin-no-file-or-directory
 # Set the LC_CTYPE so that auto-completion works and such.
-#echo "LC_ALL=\"en_US\"" > /etc/default/locale
 
 export LANGUAGE=en_US.UTF-8
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
-locale-gen en_US.UTF-8
+locale-gen en_US.UTF_8 en_US.UTF-8
 dpkg-reconfigure locales
+update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+#echo -e "LC_ALL=\"en_US.UTF-8\"\nLANG=\"en_US.UTF-8\"" > /etc/default/locale
 
 
 ###############################################################################
@@ -112,6 +113,8 @@ date > /etc/bootstrap_date
 ###############################################################################
 # you can find out what version your virtualbox is by running VBoxManage --version
 # and then taking everything from the left of the r (eg 4.3.20r96996 should be 4.3.20)
+# http://xmodulo.com/how-to-install-virtualbox-guest-additions-for-linux.html
+# http://andrewelkins.com/linux/install-virtualbox-guest-additions-command-line/
 vbox_version="$VBOX_VERSION"
 if [[ -n "$vbox_version" ]]; then
   echo "Setting up guest additions for virtualbox ${vbox_version}"
@@ -145,8 +148,9 @@ apt-get -y remove linux-headers-generic build-essential gcc dkms
 # Remove the build tools to keep things pristine
 apt-get -y remove make curl git-core
 
-apt-get -y autoremove
+apt-get -y autoclean
 apt-get -y clean
+apt-get -y autoremove
 
 # Removing leftover leases and persistent rules
 rm -f /var/lib/dhcp3/*
@@ -170,6 +174,11 @@ unset IFS
 for i in "${!log_files[@]}"; do
   cat /dev/null > ${log_files[i]}
 done
+
+# remove extraneous man pages in other languages
+# https://wiki.debian.org/ReduceDebian
+m -rf /usr/share/man/??
+rm -rf /usr/share/man/??_*
 
 
 ###############################################################################
