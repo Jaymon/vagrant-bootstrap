@@ -31,7 +31,7 @@ platform_version="$(lsb_release -s -r)"
 ###############################################################################
 # The main user (`$account` in our case) needs to have **password-less** sudo
 # This user belongs to the `admin`/`sudo` group, so we'll change that line.
-is_exempt=$(grep -e '^Defaults\s\+exempt_group=admin$' /etc/sudoers; echo $?)
+is_exempt=$(grep -eq '^Defaults\s\+exempt_group=admin$' /etc/sudoers; echo $?)
 if [[ $is_exempt -eq 1 ]]; then
   echo "exempting admin group from defaults"
   sed -i -e '/Defaults\s\+env_reset/a Defaults\texempt_group=admin' /etc/sudoers
@@ -42,11 +42,12 @@ groupadd -r admin || true
 usermod -a -G admin $account
 sed -i -e 's/%admin ALL=(ALL) ALL/%admin ALL=(ALL) NOPASSWD:ALL/g' /etc/sudoers
 
-
 echo "Set the root password to \"vagrant\" at the prompt"
 export DEBIAN_FRONTEND=newt
 passwd root
 export DEBIAN_FRONTEND=noninteractive
+
+
 ###############################################################################
 # Get rid of annoyances and extraneous error messages
 ###############################################################################
@@ -91,7 +92,7 @@ unset vssh
 # Misc tweaks
 ###############################################################################
 
-is_dns_ignored=$(grep '^UseDNS' /etc/ssh/sshd_config; echo $?)
+is_dns_ignored=$(grep -q '^UseDNS' /etc/ssh/sshd_config; echo $?)
 if [[ $is_dns_ignored -eq 1 ]]; then
   echo "Tweak sshd to prevent DNS resolution (speed up logins)"
   echo 'UseDNS no' >> /etc/ssh/sshd_config
@@ -119,7 +120,7 @@ vbox_version="$VBOX_VERSION"
 if [[ -n "$vbox_version" ]]; then
   echo "Setting up guest additions for virtualbox ${vbox_version}"
   #apt-get -y install linux-headers-generic build-essential dkms
-  apt-get -y install dkms gcc
+  apt-get -y install linux-headers-$(uname -r) linux-headers-generic build-essential dkms gcc
   cd /tmp
   wget "http://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso"
   #mkdir -p /mnt
@@ -128,7 +129,7 @@ if [[ -n "$vbox_version" ]]; then
   rm VBoxGuestAdditions_${vbox_version}.iso
   umount /mnt
   #rmdir /media/VBoxGuestAdditions
-  is_installed=$(lsmod | grep vbox; echo $?)
+  is_installed=$(lsmod | grep -q vbox; echo $?)
   if [[ $is_installed -gt 0 ]]; then
     echo "WARNING: GUEST ADDITIONS ARE NOT INSTALLED CORRECTLY"
   fi
@@ -143,7 +144,7 @@ fi
 echo "Cleaning up packages, files, and log files"
 # Remove the linux headers to keep things pristine
 apt-get -y remove linux-headers-$(uname -r)
-apt-get -y remove linux-headers-generic build-essential gcc dkms
+apt-get -y remove linux-headers-generic build-essential dkms gcc
 
 # Remove the build tools to keep things pristine
 apt-get -y remove make curl git-core
@@ -177,7 +178,7 @@ done
 
 # remove extraneous man pages in other languages
 # https://wiki.debian.org/ReduceDebian
-m -rf /usr/share/man/??
+rm -rf /usr/share/man/??
 rm -rf /usr/share/man/??_*
 
 
