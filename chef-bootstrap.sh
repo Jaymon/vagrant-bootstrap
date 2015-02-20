@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-##
+###############################################################################
 # Install chef solo if it hasn't already been installed
 #
-# this is handy to take vanilla boxes to a box capable of being provisioned
-##
+# this is handy to take vanilla boxes to a box capable of being provisioned with Chef-solo
+###############################################################################
 #version=11.12.4
 version=12.0.3
 if [[ -n $1 ]]; then
