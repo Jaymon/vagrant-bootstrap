@@ -4,6 +4,20 @@ This is just a handy script that removes the tedium of building a new Vagrant Ub
 
 ## Create the box
 
+### Creating the box in Virtualbox
+
+Choose a `vmdk` hard drive type, make it grow dynamically. Once in the Manager, right click on your box and choose settings.
+
+Under System, on the Motherboard tab, change the Pointing Device to `PS/2 Mouse`. On the Processor tab, select 2 CPUs, and make Execution Cap to 100%, and enable PAE/NX. Make sure VT-x/AMD-V and Nested Paging is enabled in Acceleration.
+
+Under Audio, uncheck Enable Audio.
+
+Under Ports, basically uncheck every Enable..., because you won't need Serial Ports or USB.
+
+That's pretty much everything, now you should be able to click start.
+
+### During the installation
+
 Get the first part of the instructions from this [tutorial](http://www.sitepoint.com/create-share-vagrant-base-box/).
 
     When prompted to enter the hostname, type vagrant
@@ -13,6 +27,18 @@ Get the first part of the instructions from this [tutorial](http://www.sitepoint
     Partitioning method: Guided – use entire disk and set up LVM
     When prompted which software to install, select OpenSSH server, the rest such as LAMP or MySQL will be installed later
     Select to install GRUB boot loader on the master boot record
+
+### After the OS installation
+
+Power down the box completely, then click settings again.
+
+Under System, unclick CD/DVD.
+
+Under Storage, get rid of the CD-ROM drive, you won't need it anymore.
+
+Now you can start the box.
+
+### After logging into box
 
 When you are ready to run this script, you can just run these commands:
 

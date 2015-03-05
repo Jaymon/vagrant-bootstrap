@@ -31,7 +31,7 @@ platform_version="$(lsb_release -s -r)"
 ###############################################################################
 # The main user (`$account` in our case) needs to have **password-less** sudo
 # This user belongs to the `admin`/`sudo` group, so we'll change that line.
-is_exempt=$(grep -eq '^Defaults\s\+exempt_group=admin$' /etc/sudoers; echo $?)
+is_exempt=$(grep -qe '^Defaults\s\+exempt_group=admin$' /etc/sudoers; echo $?)
 if [[ $is_exempt -eq 1 ]]; then
   echo "exempting admin group from defaults"
   sed -i -e '/Defaults\s\+env_reset/a Defaults\texempt_group=admin' /etc/sudoers
