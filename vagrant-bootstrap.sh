@@ -42,10 +42,41 @@ groupadd -r admin || true
 usermod -a -G admin $account
 sed -i -e 's/%admin ALL=(ALL) ALL/%admin ALL=(ALL:ALL) NOPASSWD:ALL/g' /etc/sudoers
 
-echo "Set the root password to \"vagrant\" at the prompt"
-export DEBIAN_FRONTEND=newt
-passwd root
-export DEBIAN_FRONTEND=noninteractive
+
+apt-get -y install whois
+set_root_passwd=0
+root_plaintext_passwd=$account
+root_shadow=$(grep -e "^root:" /etc/shadow)
+root_orig_passwd_hash=$(echo $root_shadow | cut -d: -f2)
+if [[ $root_orig_passwd_hash != "*" ]]; then
+  root_method=$(echo $root_shadow | cut -d$ -f2)
+  root_salt=$(echo $root_shadow | cut -d$ -f3)
+  root_orig_passwd=$(echo $root_shadow | cut -d$ -f4)
+
+  # these are from man crypt 3, there is a mkpasswd -m help but it doesn't include the
+  # numbers and isn't guarranteed to be there :(
+  declare -A methods=( ["1"]="md5" ["2"]="Blowfish" ["2a"]="Blowfish" ["5"]="SHA-256" ["6"]="SHA-512" )
+
+  root_passwd_hash=$(mkpasswd --method="${methods["$root_method"]}" --salt="$root_salt" "$root_plaintext_passwd")
+
+  if [[ $root_orig_passwd_hash == $root_passwd_hash ]]; then
+    echo "root password has already been changed to $account"
+  else
+    set_root_passwd=1
+  fi
+else
+  set_root_passwd=1
+fi
+
+if [[ $set_root_passwd -eq 1 ]]; then
+
+  echo "Set the root password to \"${account}\" at the prompt"
+
+  export DEBIAN_FRONTEND=newt
+  passwd root
+  export DEBIAN_FRONTEND=noninteractive
+
+fi
 
 
 ###############################################################################
@@ -150,6 +181,7 @@ apt-get -y remove --purge --auto-remove gcc
 apt-get -y remove --purge --auto-remove make
 apt-get -y remove --purge --auto-remove curl
 apt-get -y remove --purge --auto-remove git-core
+apt-get -y remove --purge --auto-remove whois
 
 apt-get -y autoclean
 apt-get -y clean
