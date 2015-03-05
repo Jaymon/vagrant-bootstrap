@@ -40,7 +40,7 @@ fi
 echo "adding $account to admin group and making admin have passwordless sudo"
 groupadd -r admin || true
 usermod -a -G admin $account
-sed -i -e 's/%admin ALL=(ALL) ALL/%admin ALL=(ALL) NOPASSWD:ALL/g' /etc/sudoers
+sed -i -e 's/%admin ALL=(ALL) ALL/%admin ALL=(ALL:ALL) NOPASSWD:ALL/g' /etc/sudoers
 
 echo "Set the root password to \"vagrant\" at the prompt"
 export DEBIAN_FRONTEND=newt
@@ -119,16 +119,13 @@ date > /etc/bootstrap_date
 vbox_version="$VBOX_VERSION"
 if [[ -n "$vbox_version" ]]; then
   echo "Setting up guest additions for virtualbox ${vbox_version}"
-  #apt-get -y install linux-headers-generic build-essential dkms
   apt-get -y install linux-headers-$(uname -r) linux-headers-generic build-essential dkms gcc
   cd /tmp
   wget "http://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso"
-  #mkdir -p /mnt
   mount -o loop,ro VBoxGuestAdditions_${vbox_version}.iso /mnt
   sh /mnt/VBoxLinuxAdditions.run
   rm VBoxGuestAdditions_${vbox_version}.iso
   umount /mnt
-  #rmdir /media/VBoxGuestAdditions
   is_installed=$(lsmod | grep -q vbox; echo $?)
   if [[ $is_installed -gt 0 ]]; then
     echo "WARNING: GUEST ADDITIONS ARE NOT INSTALLED CORRECTLY"
@@ -141,13 +138,18 @@ fi
 ###############################################################################
 # Clean up
 ###############################################################################
-echo "Cleaning up packages, files, and log files"
+echo "Cleaning up packages, files, temp, and log files"
 # Remove the linux headers to keep things pristine
-apt-get -y remove linux-headers-$(uname -r)
-apt-get -y remove linux-headers-generic build-essential dkms gcc
+apt-get -y remove --purge --auto-remove linux-headers-$(uname -r)
+apt-get -y remove --purge --auto-remove linux-headers-generic
+apt-get -y remove --purge --auto-remove build-essential
+apt-get -y remove --purge --auto-remove dkms
+apt-get -y remove --purge --auto-remove gcc
 
 # Remove the build tools to keep things pristine
-apt-get -y remove make curl git-core
+apt-get -y remove --purge --auto-remove make
+apt-get -y remove --purge --auto-remove curl
+apt-get -y remove --purge --auto-remove git-core
 
 apt-get -y autoclean
 apt-get -y clean
@@ -157,13 +159,14 @@ apt-get -y autoremove
 rm -f /var/lib/dhcp3/*
 
 # Make sure Udev doesn't block our network, see: http://6.ptmc.org/?p=164
-rm /etc/udev/rules.d/70-persistent-net.rules
+rm -rf /etc/udev/rules.d/70-persistent-net.rules
 mkdir /etc/udev/rules.d/70-persistent-net.rules
 rm -rf /dev/.udev/
 rm /lib/udev/rules.d/75-persistent-net-generator.rules
 
-# Remove any temporary work files, including the postinstall.sh script
-rm -f /home/${account}/{*.iso,bootstrap*.sh}
+# Remove any temporary work files
+#rm -f /home/${account}/{*.iso,*bootstrap.sh}
+rm -f /home/${account}/*.iso
 
 # clear temp
 rm -rf /tmp/*
@@ -192,7 +195,7 @@ rm -f /EMPTY
 
 # leave no trace
 rm /home/${account}/.bash_history
-rm "${BASH_SOURCE[0]}"
+rm "$(echo ${BASH_SOURCE[0]} | sed 's|^./||')"
 
 echo "You might want to run \"sudo reboot\" one last time before packaging this box"
 exit
