@@ -137,7 +137,8 @@ fi
 echo -e "###############################################################################\n# ${MOTD}\n###############################################################################" > /etc/motd.tail
 
 motd_file="/etc/update-motd.d/99-footer"
-if [[ -f $motd_file ]]; then
+if [[ ! -f $motd_file ]]; then
+  echo "Adding file for motd: $motd_file"
   echo -e "#!/bin/sh\n[ -f /etc/motd.tail ] && cat /etc/motd.tail || true" > $motd_file
   chmod 755 $motd_file
 fi
