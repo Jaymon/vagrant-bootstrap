@@ -43,6 +43,7 @@ usermod -a -G admin $account
 sed -i -e 's/%admin ALL=(ALL) ALL/%admin ALL=(ALL:ALL) NOPASSWD:ALL/g' /etc/sudoers
 
 
+# you could also approach this using expect http://unix.stackexchange.com/a/21717
 apt-get -y install whois
 set_root_passwd=0
 root_plaintext_passwd=$account
