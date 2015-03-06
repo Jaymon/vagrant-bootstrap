@@ -1,6 +1,6 @@
 # Vagrant Bootstrap
 
-This is just a handy script that removes the tedium of building a new Vagrant Ubuntu base box. It is based off a `postinstall.sh` script I found in one of the baseboxes back in the day.
+This is just a handy script that removes the tedium of building a new Vagrant Ubuntu base box. It is based off a `postinstall.sh` script I found in one of the baseboxes back in the day. We've used this to build Ubuntu 14.04 boxes.
 
 ## Create the box
 
