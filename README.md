@@ -6,7 +6,7 @@ This is just a handy script that removes the tedium of building a new Vagrant Ub
 
 ### Creating the box in Virtualbox
 
-Choose a `vmdk` hard drive type, make it grow dynamically. Once in the Manager, right click on your box and choose settings.
+Choose the `vmdk` hard drive type, make it grow dynamically to about 80gb. Once in the Manager, right click on your box and choose settings.
 
 Under System, on the Motherboard tab, change the Pointing Device to `PS/2 Mouse`. On the Processor tab, select 2 CPUs, and make Execution Cap to 100%, and enable PAE/NX. Make sure VT-x/AMD-V and Nested Paging is enabled in Acceleration.
 
@@ -15,6 +15,8 @@ Under Audio, uncheck Enable Audio.
 Under Ports, basically uncheck every Enable..., because you won't need Serial Ports or USB.
 
 That's pretty much everything, now you should be able to click start.
+
+You should be able to load your Ubuntu download iso image and use that to install the OS.
 
 ### During the installation
 
@@ -40,7 +42,7 @@ Now you can start the box.
 
 ### After logging into box
 
-When you are ready to run this script, you can just run these commands:
+You can just run these commands:
 
     wget https://raw.githubusercontent.com/Jaymon/vagrant-bootstrap/master/vagrant-bootstrap.sh
     chmod 755 vagrant-boostrap.sh
