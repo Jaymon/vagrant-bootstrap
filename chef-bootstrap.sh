@@ -11,5 +11,5 @@ if [[ -n $1 ]]; then
 fi
 
 #which chef-solo || wget -qO- https://www.opscode.com/chef/install.sh | sudo bash
-chef-solo --version | grep "$version" || wget -qO- https://www.opscode.com/chef/install.sh | sudo bash /dev/stdin -v "$version"
+chef-solo --version 2>/dev/null | grep "$version" || wget -qO- https://www.opscode.com/chef/install.sh | sudo bash /dev/stdin -v "$version"
 
