@@ -79,18 +79,22 @@ And then import it into Vagrant:
 
 You can use the included `chef-bootstrap.sh` script to make sure Chef is installed on the box by putting this line in your `Vagrantfile` before your chef provisioning code:
 
-    config.vm.provision :shell, :path => ::File.join("PATH", "TO", "chef-bootstrap.sh")
+```ruby
+config.vm.provision :shell, :path => ::File.join("PATH", "TO", "chef-bootstrap.sh")
+```
 
 You can also be even more automatic in your `Vagrantfile` if you want by replacing the above shell provisioner with this:
 
-    chef_bootstrap = ::File.join(::Dir.tmpdir, "chef-bootstrap.sh")
-    if !::File.exists?(chef_bootstrap)
-      require 'open-uri'
-      open(chef_bootstrap, 'w') do |f|
-        f << open('https://raw.githubusercontent.com/Jaymon/vagrant-bootstrap/master/chef-bootstrap.sh').read
-      end
-    end
-    config.vm.provision :shell, :path => chef_bootstrap
+```ruby
+require 'tmpdir'
+chef_bootstrap = ::File.join(::Dir.tmpdir, "chef-bootstrap.sh")
+if !::File.exists?(chef_bootstrap)
+  require 'open-uri'
+  download = open('https://raw.githubusercontent.com/Jaymon/vagrant-bootstrap/master/chef-bootstrap.sh')
+  ::IO.copy_stream(download, chef_bootstrap)
+end
+config.vm.provision :shell, :path => chef_bootstrap
+```
 
 The chef script is smart enough to only install chef on the very first provision, or when you want to upgrade the chef version.
 
