@@ -25,6 +25,8 @@ platform_version="$(lsb_release -s -r)"
 # Run the script in debug mode
 #set -x
 
+apt-get update
+
 
 ###############################################################################
 # Passwordless sudo and root access

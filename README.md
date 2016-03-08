@@ -99,6 +99,18 @@ config.vm.provision :shell, :path => chef_bootstrap
 
 The chef script is smart enough to only install chef on the very first provision, or when you want to upgrade the chef version.
 
+
+## Virtualbox Guest Additions
+
+You can find out what version your virtualbox is by running `VBoxManage --version` and then taking everything from the left of the r (eg 4.3.20r96996 should be 4.3.20).
+
+Then ssh into your Vagrant box and run:
+
+    wget https://raw.githubusercontent.com/Jaymon/vagrant-bootstrap/master/vbox-bootstrap.sh
+    chmod 755 vbox-bootstrap.sh
+    sudo ./vbox-bootstrap.sh
+
+
 ## Other
 
 see also:
