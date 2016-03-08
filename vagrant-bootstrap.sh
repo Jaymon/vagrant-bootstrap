@@ -151,26 +151,8 @@ date > /etc/bootstrap_date
 ###############################################################################
 # Install guest additions
 ###############################################################################
-# you can find out what version your virtualbox is by running VBoxManage --version
-# and then taking everything from the left of the r (eg 4.3.20r96996 should be 4.3.20)
-# http://xmodulo.com/how-to-install-virtualbox-guest-additions-for-linux.html
-# http://andrewelkins.com/linux/install-virtualbox-guest-additions-command-line/
-vbox_version="$VBOX_VERSION"
-if [[ -n "$vbox_version" ]]; then
-  echo "Setting up guest additions for virtualbox ${vbox_version}"
-  apt-get -y install linux-headers-$(uname -r) linux-headers-generic build-essential dkms gcc
-  cd /tmp
-  wget "http://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso"
-  mount -o loop,ro VBoxGuestAdditions_${vbox_version}.iso /mnt
-  sh /mnt/VBoxLinuxAdditions.run
-  rm VBoxGuestAdditions_${vbox_version}.iso
-  umount /mnt
-  is_installed=$(lsmod | grep -q vbox; echo $?)
-  if [[ $is_installed -gt 0 ]]; then
-    echo "WARNING: GUEST ADDITIONS ARE NOT INSTALLED CORRECTLY"
-  fi
-else
-  echo "if you want to setup guest additions, set VBOX_VERSION env variable"
+if [[ -f vbox-bootstrap.sh ]]; then
+  ./vbox-bootstrap.sh 
 fi
 
 
@@ -178,12 +160,6 @@ fi
 # Clean up
 ###############################################################################
 echo "Cleaning up packages, files, temp, and log files"
-# Remove the linux headers to keep things pristine
-apt-get -y remove --purge --auto-remove linux-headers-$(uname -r)
-apt-get -y remove --purge --auto-remove linux-headers-generic
-apt-get -y remove --purge --auto-remove build-essential
-apt-get -y remove --purge --auto-remove dkms
-apt-get -y remove --purge --auto-remove gcc
 
 # Remove the build tools to keep things pristine
 apt-get -y remove --purge --auto-remove make

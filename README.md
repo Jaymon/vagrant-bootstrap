@@ -45,8 +45,9 @@ Now you can start the box.
 You can just run these commands:
 
     wget https://raw.githubusercontent.com/Jaymon/vagrant-bootstrap/master/vagrant-bootstrap.sh
-    chmod 755 vagrant-boostrap.sh
-    sudo ./vagrant-bootsrap.sh
+    wget https://raw.githubusercontent.com/Jaymon/vagrant-bootstrap/master/vbox-bootstrap.sh
+    chmod 755 *-bootstrap.sh
+    sudo ./vagrant-bootstrap.sh
 
 You can also customize the script a bit with some environment variables:
 
