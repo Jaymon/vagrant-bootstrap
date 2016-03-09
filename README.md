@@ -95,9 +95,15 @@ if !::File.exists?(chef_bootstrap)
   ::IO.copy_stream(download, chef_bootstrap)
 end
 config.vm.provision :shell, :path => chef_bootstrap
+# uncomment below if you want to specify a different chef version
+# than the one chef-bootstrap is pegged on
+#config.vm.provision "shell" do |s|
+#  s.path = chef_bootstrap
+#  s.args   = ["12.7.2"]
+#end
 ```
 
-The chef script is smart enough to only install chef on the very first provision, or when you want to upgrade the chef version.
+The chef script is smart enough to only install chef on the very first provision, or when you change the chef version.
 
 
 ## Virtualbox Guest Additions
@@ -109,6 +115,24 @@ Then ssh into your Vagrant box and run:
     wget https://raw.githubusercontent.com/Jaymon/vagrant-bootstrap/master/vbox-bootstrap.sh
     chmod 755 vbox-bootstrap.sh
     sudo ./vbox-bootstrap.sh
+
+
+If you would like you vagrant box to automatically update the guest additions when you upgrade Virtualbox, put this in your Vagrantfile:
+
+```ruby
+# update virtualbox guest additions if needed
+require 'tmpdir'
+require 'open-uri'
+vbox_version = `VboxManage --version`.chomp.split("r", 2)[0]
+vbox_bootstrap = ::File.join(::Dir.tmpdir, "vbox-bootstrap-#{vbox_version}.sh")
+if !::File.exists?(vbox_bootstrap)
+  download = open('https://raw.githubusercontent.com/Jaymon/vagrant-bootstrap/master/vbox-bootstrap.sh')
+  ::IO.copy_stream(download, vbox_bootstrap)
+  config.vm.provision "shell" do |s|
+    s.path = vbox_bootstrap
+    s.args   = [vbox_version]
+  end
+end
 
 
 ## Other
