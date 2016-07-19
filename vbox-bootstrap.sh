@@ -22,7 +22,14 @@ if [[ -n "$vbox_version" ]]; then
 
   export DEBIAN_FRONTEND=noninteractive
 
-  apt-get -y install linux-headers-$(uname -r) linux-headers-generic build-essential dkms gcc
+  remove_v_headers=$(dpkg -s linux-headers-$(uname -r) > /dev/null 2>&1;echo $?)
+  remove_generic_headers=$(dpkg -s linux-headers-generic > /dev/null 2>&1;echo $?)
+  remove_build_essential=$(dpkg -s build-essential > /dev/null 2>&1;echo $?)
+  remove_dkms=$(dpkg -s dkms > /dev/null 2>&1;echo $?)
+  remove_gcc=$(dpkg -s gcc > /dev/null 2>&1;echo $?)
+
+  apt-get update
+  apt-get -y install --no-install-recommends linux-headers-$(uname -r) linux-headers-generic build-essential dkms gcc
   cd /tmp
   wget "http://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso"
   mount -o loop,ro VBoxGuestAdditions_${vbox_version}.iso /mnt
@@ -33,11 +40,25 @@ if [[ -n "$vbox_version" ]]; then
   if lsmod | grep -q vbox; then
 
     # Remove the linux headers to keep things pristine
-    apt-get -y remove --purge --auto-remove linux-headers-$(uname -r)
-    apt-get -y remove --purge --auto-remove linux-headers-generic
-    apt-get -y remove --purge --auto-remove build-essential
-    apt-get -y remove --purge --auto-remove dkms
-    apt-get -y remove --purge --auto-remove gcc
+    if [[ $remove_v_headers -eq 1 ]]; then
+      apt-get -y remove --purge --auto-remove linux-headers-$(uname -r)
+    fi
+
+    if [[ $remove_generic_headers -eq 1 ]]; then
+      apt-get -y remove --purge --auto-remove linux-headers-generic
+    fi
+
+    if [[ $remove_build_essential -eq 1 ]]; then
+      apt-get -y remove --purge --auto-remove build-essential
+    fi
+
+    if [[ $remove_dkms -eq 1 ]]; then
+      apt-get -y remove --purge --auto-remove dkms
+    fi
+
+    if [[ $remove_gcc -eq 1 ]]; then
+      apt-get -y remove --purge --auto-remove gcc
+    fi
 
   else
 
