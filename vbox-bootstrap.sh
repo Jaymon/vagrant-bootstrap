@@ -28,6 +28,9 @@ if [[ -n "$vbox_version" ]]; then
   remove_dkms=$(dpkg -s dkms > /dev/null 2>&1;echo $?)
   remove_gcc=$(dpkg -s gcc > /dev/null 2>&1;echo $?)
 
+  set -e
+  set -o pipefail
+
   apt-get update
   apt-get -y install --no-install-recommends linux-headers-$(uname -r) linux-headers-generic build-essential dkms gcc
   cd /tmp
@@ -36,6 +39,9 @@ if [[ -n "$vbox_version" ]]; then
   sh /mnt/VBoxLinuxAdditions.run
   rm VBoxGuestAdditions_${vbox_version}.iso
   umount /mnt
+
+  set +e
+  set +o pipefail
 
   if lsmod | grep -q vbox; then
 
@@ -52,12 +58,13 @@ if [[ -n "$vbox_version" ]]; then
       apt-get -y remove --purge --auto-remove build-essential
     fi
 
-    if [[ $remove_dkms -eq 1 ]]; then
-      apt-get -y remove --purge --auto-remove dkms
-    fi
-
     if [[ $remove_gcc -eq 1 ]]; then
       apt-get -y remove --purge --auto-remove gcc
+    fi
+
+    if [[ $remove_dkms -eq 1 ]]; then
+      rm -rf /var/lib/dkms/*
+      apt-get -y remove --purge --auto-remove dkms
     fi
 
   else
