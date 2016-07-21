@@ -18,58 +18,68 @@ fi
 # only if we found a vbox version do we run this
 if [[ -n "$vbox_version" ]]; then
 
-  echo "Setting up guest additions for virtualbox ${vbox_version}"
+  installed_vbox_version=$(modinfo vboxguest 2> /dev/null | grep -iw version | cut -d: -f2 | tr -d '[[:space:]]')
 
-  export DEBIAN_FRONTEND=noninteractive
+  if [[ $vbox_version == $installed_vbox_version ]]; then
 
-  remove_v_headers=$(dpkg -s linux-headers-$(uname -r) > /dev/null 2>&1;echo $?)
-  remove_generic_headers=$(dpkg -s linux-headers-generic > /dev/null 2>&1;echo $?)
-  remove_build_essential=$(dpkg -s build-essential > /dev/null 2>&1;echo $?)
-  remove_dkms=$(dpkg -s dkms > /dev/null 2>&1;echo $?)
-  remove_gcc=$(dpkg -s gcc > /dev/null 2>&1;echo $?)
-
-  set -e
-  set -o pipefail
-
-  apt-get update
-  apt-get -y install --no-install-recommends linux-headers-$(uname -r) linux-headers-generic build-essential dkms gcc
-  cd /tmp
-  wget "http://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso"
-  mount -o loop,ro VBoxGuestAdditions_${vbox_version}.iso /mnt
-  sh /mnt/VBoxLinuxAdditions.run
-  rm VBoxGuestAdditions_${vbox_version}.iso
-  umount /mnt
-
-  set +e
-  set +o pipefail
-
-  if lsmod | grep -q vbox; then
-
-    # Remove the linux headers to keep things pristine
-    if [[ $remove_v_headers -eq 1 ]]; then
-      apt-get -y remove --purge --auto-remove linux-headers-$(uname -r)
-    fi
-
-    if [[ $remove_generic_headers -eq 1 ]]; then
-      apt-get -y remove --purge --auto-remove linux-headers-generic
-    fi
-
-    if [[ $remove_build_essential -eq 1 ]]; then
-      apt-get -y remove --purge --auto-remove build-essential
-    fi
-
-    if [[ $remove_gcc -eq 1 ]]; then
-      apt-get -y remove --purge --auto-remove gcc
-    fi
-
-    if [[ $remove_dkms -eq 1 ]]; then
-      rm -rf /var/lib/dkms/*
-      apt-get -y remove --purge --auto-remove dkms
-    fi
+    echo "Guest additons $vbox_version already installed"
 
   else
 
-    echo "WARNING: GUEST ADDITIONS ARE NOT INSTALLED CORRECTLY"
+    echo "Setting up guest additions for virtualbox ${vbox_version}"
+
+    export DEBIAN_FRONTEND=noninteractive
+
+    remove_v_headers=$(dpkg -s linux-headers-$(uname -r) > /dev/null 2>&1;echo $?)
+    remove_generic_headers=$(dpkg -s linux-headers-generic > /dev/null 2>&1;echo $?)
+    remove_build_essential=$(dpkg -s build-essential > /dev/null 2>&1;echo $?)
+    remove_dkms=$(dpkg -s dkms > /dev/null 2>&1;echo $?)
+    remove_gcc=$(dpkg -s gcc > /dev/null 2>&1;echo $?)
+
+    set -e
+    set -o pipefail
+
+    apt-get update
+    apt-get -y install --no-install-recommends linux-headers-$(uname -r) linux-headers-generic build-essential dkms gcc
+    cd /tmp
+    wget "http://download.virtualbox.org/virtualbox/${vbox_version}/VBoxGuestAdditions_${vbox_version}.iso"
+    mount -o loop,ro VBoxGuestAdditions_${vbox_version}.iso /mnt
+    sh /mnt/VBoxLinuxAdditions.run
+    rm VBoxGuestAdditions_${vbox_version}.iso
+    umount /mnt
+
+    set +e
+    set +o pipefail
+
+    if lsmod | grep -q vbox; then
+
+      # Remove the linux headers to keep things pristine
+      if [[ $remove_v_headers -eq 1 ]]; then
+        apt-get -y remove --purge --auto-remove linux-headers-$(uname -r)
+      fi
+
+      if [[ $remove_generic_headers -eq 1 ]]; then
+        apt-get -y remove --purge --auto-remove linux-headers-generic
+      fi
+
+      if [[ $remove_build_essential -eq 1 ]]; then
+        apt-get -y remove --purge --auto-remove build-essential
+      fi
+
+      if [[ $remove_gcc -eq 1 ]]; then
+        apt-get -y remove --purge --auto-remove gcc
+      fi
+
+      if [[ $remove_dkms -eq 1 ]]; then
+        rm -rf /var/lib/dkms/*
+        apt-get -y remove --purge --auto-remove dkms
+      fi
+
+    else
+
+      echo "WARNING: GUEST ADDITIONS ARE NOT INSTALLED CORRECTLY"
+
+    fi
 
   fi
 
