@@ -1,6 +1,7 @@
 # Vagrant Bootstrap
 
-This is just a handy script that removes the tedium of building a new Vagrant Ubuntu base box. It is based off a `postinstall.sh` script I found in one of the baseboxes back in the day. We've used this to build Ubuntu 14.04 boxes.
+These are just some handy scripts that remove the tedium of building new Vagrant Ubuntu base boxes. They are inspired and based off a `postinstall.sh` script I found in one of the baseboxes back in the day. We've used this to build Ubuntu 12.04 and 14.04 boxes.
+
 
 ## Create the box
 
@@ -18,6 +19,7 @@ That's pretty much everything, now you should be able to click start.
 
 You should be able to load your Ubuntu download iso image and use that to install the OS.
 
+
 ### During the installation
 
 Get the first part of the instructions from this [tutorial](http://www.sitepoint.com/create-share-vagrant-base-box/).
@@ -30,6 +32,7 @@ Get the first part of the instructions from this [tutorial](http://www.sitepoint
     When prompted which software to install, select OpenSSH server, the rest such as LAMP or MySQL will be installed later
     Select to install GRUB boot loader on the master boot record
 
+
 ### After the OS installation
 
 Power down the box completely, then click settings again.
@@ -39,6 +42,7 @@ Under System, unclick CD/DVD.
 Under Storage, get rid of the CD-ROM drive, you won't need it anymore.
 
 Now you can start the box.
+
 
 ### After logging into box
 
@@ -65,6 +69,7 @@ and reboot after the script is done running:
 
     sudo reboot
 
+
 ## Package the box for Vagrant
 
 package up the box for Vagrant:
@@ -75,6 +80,7 @@ package up the box for Vagrant:
 And then import it into Vagrant:
 
     vagrant box add --name <BOX NAME> /PATH/TO/package.box
+
 
 ## Chef
 
@@ -88,22 +94,33 @@ You can also be even more automatic in your `Vagrantfile` if you want by replaci
 
 ```ruby
 require 'tmpdir'
-chef_bootstrap = ::File.join(::Dir.tmpdir, "chef-bootstrap.sh")
+require 'open-uri'
+chef_version = "12.7.2"
+chef_bootstrap = ::File.join(::Dir.tmpdir, "chef-bootstrap-#{chef_version}.sh")
 if !::File.exists?(chef_bootstrap)
-  require 'open-uri'
   download = open('https://raw.githubusercontent.com/Jaymon/vagrant-bootstrap/master/chef-bootstrap.sh')
   ::IO.copy_stream(download, chef_bootstrap)
 end
-config.vm.provision :shell, :path => chef_bootstrap
-# uncomment below if you want to specify a different chef version
-# than the one chef-bootstrap is pegged on
-#config.vm.provision "shell" do |s|
-#  s.path = chef_bootstrap
-#  s.args   = ["12.7.2"]
-#end
+#config.vm.provision :shell, :path => chef_bootstrap
+config.vm.provision "shell" do |s|
+  s.path = chef_bootstrap
+  s.args = [chef_version]
+end
 ```
 
 The chef script is smart enough to only install chef on the very first provision, or when you change the chef version.
+
+**NOTE** -- Vagrant has this built-in now by setting the [chef.version value](https://www.vagrantup.com/docs/provisioning/chef_common.html#version):
+
+```ruby
+config.vm.provision :chef_solo do |chef|
+
+  chef.version = "CHEF_VERSION"
+
+end
+```
+
+The `chef-bootstrap` script is still really handy though, we use it to install chef on new production boxes.
 
 
 ## Virtualbox Guest Additions
