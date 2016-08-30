@@ -123,6 +123,24 @@ end
 The `chef-bootstrap` script is still really handy though, we use it to install chef on new production boxes.
 
 
+### Finding latest 
+
+Also, if you are curious what is the latest version of Chef, you can use curl:
+
+    $ curl -v "https://omnitruck-direct.chef.io/stable/chef/metadata?v=12&p=ubuntu&pv=14.04&m=x86_64"
+
+Here is what Chef says:
+
+> In order to test the version parameter, adventurous users may take the Metadata URL below and modify the '&v=<number>' parameter until you successfully get a URL that does not 404 (e.g. via curl or wget). You should be able to use '&v=11' or '&v=12' successfully.
+
+That will redirect you to the latest version, the bottom lines in the curl output should be something like:
+
+> url	https://packages.chef.io/stable/ubuntu/14.04/chef_12.13.37-1_amd64.deb
+> version	12.13.37
+
+So you know `12.13.37` on the 12 branch is the latest version, and you can update your version accordingly.
+
+
 ## Virtualbox Guest Additions
 
 You can find out what version your virtualbox is by running `VBoxManage --version` and then taking everything from the left of the r (eg 4.3.20r96996 should be 4.3.20).
