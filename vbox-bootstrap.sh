@@ -19,7 +19,8 @@ fi
 if [[ -n "$vbox_version" ]]; then
 
   # http://www.linuxquestions.org/questions/linux-virtualization-and-cloud-90/how-to-check-version-of-virtualbox-guest-additions-currently-installed-in-guest-syste-946053/
-  installed_vbox_version=$(modinfo vboxguest 2> /dev/null | grep -iw version | cut -d: -f2 | tr -d '[[:space:]]')
+  #installed_vbox_version=$(modinfo vboxguest 2> /dev/null | grep -iw version | cut -d: -f2 | tr -d '[[:space:]]' | cut -dr -f1)
+  installed_vbox_version=$(modinfo vboxguest 2> /dev/null | grep -iw version |  tr -s ' ' | cut -d' ' -f2)
 
   if [[ $vbox_version == $installed_vbox_version ]]; then
 
