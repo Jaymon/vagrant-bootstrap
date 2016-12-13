@@ -5,6 +5,14 @@
 # http://xmodulo.com/how-to-install-virtualbox-guest-additions-for-linux.html
 # http://andrewelkins.com/linux/install-virtualbox-guest-additions-command-line/
 
+
+# TODO -- allow passing in a --provision flag that would change this so it doesn't purge
+# any packages and it also exits with 1 when it has updated the packages, this will allow
+# me to add this script in a Vagrantfile and have it die on upgrade, because the vagrant
+# box will have to be reloaded
+# https://github.com/matejak/argbash
+
+
 # first check for passed in value
 if [[ -n $1 ]]; then
   vbox_version=$1
@@ -73,7 +81,7 @@ if [[ -n "$vbox_version" ]]; then
       fi
 
       if [[ $remove_dkms -eq 1 ]]; then
-        rm -rf /var/lib/dkms/*
+        #rm -rf /var/lib/dkms/*
         apt-get -y remove --purge --auto-remove dkms
       fi
 
