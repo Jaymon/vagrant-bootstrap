@@ -147,10 +147,13 @@ You can find out what version your virtualbox is by running `VBoxManage --versio
 
 Then ssh into your Vagrant box and run:
 
-    wget https://raw.githubusercontent.com/Jaymon/vagrant-bootstrap/master/vbox-bootstrap.sh
-    chmod 755 vbox-bootstrap.sh
-    sudo ./vbox-bootstrap.sh
+    $ wget https://raw.githubusercontent.com/Jaymon/vagrant-bootstrap/master/vbox-bootstrap.sh
+    $ chmod 755 vbox-bootstrap.sh
+    $ sudo ./vbox-bootstrap.sh VERSION
 
+So if your version was `.4.3.20` you would run:
+
+    $ sudo ./vbox-bootstrap.sh "4.3.20"
 
 If you would like you vagrant box to automatically update the guest additions when you upgrade Virtualbox, put this in your Vagrantfile:
 
@@ -163,10 +166,10 @@ vbox_bootstrap = ::File.join(::Dir.tmpdir, "vbox-bootstrap-#{vbox_version}.sh")
 if !::File.exists?(vbox_bootstrap)
   download = open('https://raw.githubusercontent.com/Jaymon/vagrant-bootstrap/master/vbox-bootstrap.sh')
   ::IO.copy_stream(download, vbox_bootstrap)
-  config.vm.provision "shell" do |s|
-    s.path = vbox_bootstrap
-    s.args   = [vbox_version]
-  end
+end
+config.vm.provision "shell", run: "always" do |s|
+  s.path = vbox_bootstrap
+  s.args = [vbox_version]
 end
 ```
 
