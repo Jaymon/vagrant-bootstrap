@@ -183,3 +183,6 @@ https://docs.vagrantup.com/v2/virtualbox/boxes.html
 Virtualbox shared folders:
 https://help.ubuntu.com/community/VirtualBox/SharedFolders
 
+Hashicorp now has their own boxes:
+https://atlas.hashicorp.com/ubuntu/boxes/trusty64
+
