@@ -141,6 +141,13 @@ That will redirect you to the latest version, the bottom lines in the curl outpu
 So you know `12.13.37` on the 12 branch is the latest version, and you can update your version accordingly.
 
 
+#### Update January 3, 2020
+
+This command will give you the latest chef version for Ubuntu:
+
+    $ wget -qO- "https://omnitruck-direct.chef.io/stable/chef/metadata?v=&p=$(. /etc/os-release; echo $ID)&pv=$(. /etc/os-release; echo $VERSION_ID)&m=$(uname -i)"; echo ""
+
+
 ## Virtualbox Guest Additions
 
 You can find out what version your virtualbox is by running `VBoxManage --version` and then taking everything from the left of the r (eg 4.3.20r96996 should be 4.3.20).
