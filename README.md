@@ -146,6 +146,8 @@ So you know `12.13.37` on the 12 branch is the latest version, and you can updat
 This command will give you the latest chef version for Ubuntu:
 
     $ wget -qO- "https://omnitruck-direct.chef.io/stable/chef/metadata?v=&p=$(. /etc/os-release; echo $ID)&pv=$(. /etc/os-release; echo $VERSION_ID)&m=$(uname -i)"; echo ""
+    
+You can also see the latest releases [here](https://downloads.chef.io/chef/current)
 
 
 ## Virtualbox Guest Additions
