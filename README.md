@@ -1,9 +1,20 @@
 # Vagrant Bootstrap
 
-These are just some handy scripts that remove the tedium of building new Vagrant Ubuntu base boxes. They are inspired and based off a `postinstall.sh` script I found in one of the baseboxes back in the day. We've used this to build Ubuntu 12.04 and 14.04 boxes.
+These are just some handy scripts and notes that remove the tedium of building new Vagrant Ubuntu base boxes and provisioning them. 
+
+They are inspired and based off a `postinstall.sh` script I found in one of the baseboxes back in the day. We've used this to build Ubuntu 12.04 and 14.04 boxes.
 
 
 ## Create the box
+
+Creating your own base box isn't really necessary anymore since [Vagrant now hosts a ton of premade base boxes](https://app.vagrantup.com/ubuntu). And you can easily choose a base box in the Vagrantfile:
+
+```ruby
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.vm.box = "ubuntu/trusty64"
+```
+
 
 ### Creating the box in Virtualbox
 
