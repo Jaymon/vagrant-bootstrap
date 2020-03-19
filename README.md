@@ -13,7 +13,12 @@ Creating your own base box isn't really necessary anymore since [Vagrant now hos
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.box = "ubuntu/trusty64"
+end
 ```
+
+Sometimes, the configuration in the Vagrantfile might not work, so you can add them manually on the command line:
+
+    $ vagrant box add ubuntu/bionic64
 
 
 ### Creating the box in Virtualbox
@@ -94,6 +99,8 @@ And then import it into Vagrant:
 
 
 ## Chef
+
+You can [install chef manually using these docs](https://docs.chef.io/install_omnibus/).
 
 You can use the included `chef-bootstrap.sh` script to make sure Chef is installed on the box by putting this line in your `Vagrantfile` before your chef provisioning code:
 
